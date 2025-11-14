@@ -77,16 +77,30 @@ class GoGUI:
     # --------------------------------------------------
 
     def handle_click(self, event):
-        """Convert mouse click to board coordinate and attempt a move."""
+        """Handle human move and trigger AI if necessary."""
         if self.gm.game_over:
             self.message_var.set("Game over. Restart to play again.")
             return
 
+        # Human move
         x, y = self.pixel_to_coord(event.x, event.y)
         if x is None:
             return
 
+        if self.gm.current_player != self.gm.player_color:
+            self.message_var.set("Wait for your turn.")
+            return
+
         success, msg = self.gm.play_move(x, y)
+        self.message_var.set(msg)
+        self.draw_board()
+
+        # AI move (if it's AI's turn)
+        if not self.gm.game_over and self.gm.current_player == self.gm.bot_color:
+            self.window.after(500, self.ai_turn)  # delay for visibility
+
+    def ai_turn(self):
+        success, msg = self.gm.play_ai_move()
         self.message_var.set(msg)
         self.draw_board()
 
