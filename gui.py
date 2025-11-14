@@ -3,7 +3,9 @@ from board import Board
 
 class GoGUI:
     def __init__(self, board_size=9):
-        self.board = Board(board_size)
+        from game_manager import GameManager
+        self.gm = GameManager(board_size)
+        self.board = self.gm.board
         self.size = board_size
 
         self.window = tk.Tk()
@@ -22,8 +24,6 @@ class GoGUI:
         self.message_var = tk.StringVar()
         self.message_label = tk.Label(self.window, textvariable=self.message_var, font=("Arial", 14))
         self.message_label.pack()
-
-        self.current_player = Board.BLACK
 
         self.draw_board()
         self.canvas.bind("<Button-1>", self.handle_click)
@@ -74,7 +74,7 @@ class GoGUI:
         if x is None:
             return  # Click outside board
 
-        success, msg = self.board.play_move(x, y, self.current_player)
+        success, msg = self.gm.play_move(x, y)
         self.message_var.set(msg)
 
         if success:
