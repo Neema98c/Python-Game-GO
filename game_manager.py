@@ -108,19 +108,23 @@ class GameManager:
             success, msg = self.play_move(move[0], move[1])
             return success, f"AI captures at ({move[0]+1},{move[1]+1})"
 
-        # Prefer moves adjacent to own stones
-        adjacent_moves = [m for m in legal_moves if any(
-            self.board.get(nx, ny) == self.bot_color
-            for nx, ny in self.board.get_neighbors(*m)
-        )]
+        if legal_moves:
+            # Prefer moves adjacent to own stones
+            adjacent_moves = [m for m in legal_moves if any(
+                self.board.get(nx, ny) == self.bot_color
+                for nx, ny in self.board.get_neighbors(*m)
+            )]
+            if adjacent_moves:
+                ove = random.choice(adjacent_moves)
+            else:
+                move = random.choice(legal_moves)
 
-        if adjacent_moves:
-            move = random.choice(adjacent_moves)
-        else:
-            move = random.choice(legal_moves)
+            success, msg = self.play_move(move[0], move[1])
+            return success, f"AI plays at ({move[0]+1},{move[1]+1})"
 
-        success, msg = self.play_move(move[0], move[1])
-        return success, f"AI plays at ({move[0]+1},{move[1]+1})"
+        # No legal moves available → pass
+        success, msg = self.pass_turn()
+        return success, "AI has no legal moves left and passes."
 
     # --------------------------------------------------
     # Helper functions
