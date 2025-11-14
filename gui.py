@@ -1,9 +1,9 @@
 import tkinter as tk
+from game_manager import GameManager
 from board import Board
 
 class GoGUI:
     def __init__(self, board_size=9):
-        from game_manager import GameManager
         self.gm = GameManager(board_size)
         self.board = self.gm.board
         self.size = board_size
@@ -23,7 +23,17 @@ class GoGUI:
         # Label for messages
         self.message_var = tk.StringVar()
         self.message_label = tk.Label(self.window, textvariable=self.message_var, font=("Arial", 14))
-        self.message_label.pack()
+        self.message_label.pack(pady=5)
+
+        # Buttons
+        button_frame = tk.Frame(self.window)
+        button_frame.pack(pady=5)
+
+        self.pass_button = tk.Button(button_frame, text="Pass", command=self.pass_turn, width=12)
+        self.pass_button.grid(row=0, column=0, padx=5)
+
+        self.resign_button = tk.Button(button_frame, text="Resign", command=self.resign, width=12)
+        self.resign_button.grid(row=0, column=1, padx=5)
 
         self.draw_board()
         self.canvas.bind("<Button-1>", self.handle_click)
@@ -33,7 +43,6 @@ class GoGUI:
     # --------------------------------------------------
 
     def draw_board(self):
-        """Draw the grid and stones."""
         self.canvas.delete("all")
 
         # Grid lines
@@ -64,28 +73,24 @@ class GoGUI:
                     )
 
     # --------------------------------------------------
-    # Input handling
+    # Move input handling
     # --------------------------------------------------
 
     def handle_click(self, event):
-        """Convert a click to grid coordinates and play the move."""
-        x, y = self.pixel_to_coord(event.x, event.y)
+        """Convert mouse click to board coordinate and attempt a move."""
+        if self.gm.game_over:
+            self.message_var.set("Game over. Restart to play again.")
+            return
 
+        x, y = self.pixel_to_coord(event.x, event.y)
         if x is None:
-            return  # Click outside board
+            return
 
         success, msg = self.gm.play_move(x, y)
         self.message_var.set(msg)
-
-        if success:
-            # Switch player
-            self.current_player = Board.WHITE if self.current_player == Board.BLACK else Board.BLACK
-
         self.draw_board()
 
     def pixel_to_coord(self, px, py):
-        """Convert pixel position to nearest board intersection."""
-        # Find nearest grid intersection
         x = round((px - self.margin) / self.cell_size)
         y = round((py - self.margin) / self.cell_size)
 
@@ -93,6 +98,20 @@ class GoGUI:
             return None, None
 
         return x, y
+
+    # --------------------------------------------------
+    # Pass & resign buttons
+    # --------------------------------------------------
+
+    def pass_turn(self):
+        success, msg = self.gm.pass_turn()
+        self.message_var.set(msg)
+        self.draw_board()
+
+    def resign(self):
+        success, msg = self.gm.resign()
+        self.message_var.set(msg)
+        self.draw_board()
 
     # --------------------------------------------------
 
