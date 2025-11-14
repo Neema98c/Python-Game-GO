@@ -33,11 +33,18 @@ class Board:
     # GROUP AND LIBERTY LOGIC
     # ------------------------------------------------------------
 
+    def simulate_captures(self, x, y, color):
+        """Return the number of opponent stones that would be captured if 'color' plays at (x,y)."""
+        temp_board = deepcopy(self)  # Use `import copy` for deepcopy
+        temp_board.play_move(x, y, color)
+        return temp_board.captured_last_move  # store captures in play_move
+
     def get_neighbors(self, x, y):
-        """Return valid orthogonal neighbors."""
+        """Return a list of valid neighbor coordinates."""
         neighbors = []
-        for nx, ny in [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
-            if self.within_bounds(nx, ny):
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < self.size and 0 <= ny < self.size:
                 neighbors.append((nx, ny))
         return neighbors
 
