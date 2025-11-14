@@ -124,41 +124,25 @@ class Board:
     # ------------------------------------------------------------
 
     def play_move(self, x, y, color):
-        """
-        Attempts to place a stone.
-        Returns: (success: bool, error_message: str)
-        """
-        if not self.within_bounds(x, y):
-            return False, "Move outside board."
+        if self.grid[y][x] != self.EMPTY:
+            return False, "Position already occupied.", 0
 
-        if self.get(x, y) != self.EMPTY:
-            return False, "Intersection already occupied."
+        # Place stone temporarily
+        self.grid[y][x] = color
+        captured = 0
 
-        # Check suicide
-        if self.is_suicide(x, y, color):
-            return False, "Move is suicidal."
+        # Check for opponent groups to capture
+        for nx, ny in self.get_neighbors(x, y):
+            if self.grid[ny][nx] == self.opponent(color):
+                if not self.has_liberty(nx, ny):
+                    captured += self.remove_group(nx, ny)
 
-        # Save old state for ko check
-        old_state = deepcopy(self.grid)
+        # Check for suicide
+        if not self.has_liberty(x, y):
+            self.grid[y][x] = self.EMPTY
+            return False, "Suicide move not allowed.", 0
 
-        # Place stone
-        self.set(x, y, color)
-
-        # Capture opponent stones
-        captures = self.would_capture(x, y, color)
-        for grp in captures:
-            self.remove_group(grp)
-
-        # Check ko rule (simple version: must not repeat last state)
-        new_state = deepcopy(self.grid)
-        if self.is_ko(new_state):
-            # Undo move
-            self.grid = old_state
-            return False, "Ko rule: board position repeating."
-
-        # Store new previous state
-        self.previous_state = old_state
-        return True, "Move played."
+        return True, "Move played.", captured
 
     # ------------------------------------------------------------
     # Debug / Utility
